@@ -126,7 +126,6 @@ app/build/outputs/apk/debug/app-debug.apk
 
 本项目使用 [TMDB](https://www.themoviedb.org/) API 获取影视元数据。
 
-当前 API Key: `399994aec1d62a35d2047e22ea74176d`
 
 > 如需使用自己的 API Key，请在 [TMDB](https://www.themoviedb.org/settings/api) 注册获取（免费）。
 
