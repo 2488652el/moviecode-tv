@@ -1,8 +1,9 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.dagger.hilt.android")
-    kotlin("kapt")
+    id("kotlin-kapt")
 }
 
 android {
@@ -97,6 +98,16 @@ dependencies {
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // NAS Support
+    // SMB/CIFS - jcifs-ng for SMB protocol
+    implementation("eu.agno3.jcifs:jcifs-ng:2.1.8")
+    
+    // OkHttp for WebDAV
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")
