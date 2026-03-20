@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieCode TV - UI 设计预览 (分类+轮播)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0A0A0C;
+            --bg-primary: #101214;
+            --bg-elevated: #18181B;
+            --bg-card: #1C1C1E;
+            --bg-card-hover: #2C2C2E;
+            
+            --gradient-start: #0A84FF;
+            --gradient-end: #5E5CE6;
+            --gradient-accent: #FF6B9D;
+            
+            --rating-gold: #FFD60A;
+            --success: #32D74B;
+            --error: #FF453A;
+            
+            --text-primary: #F5F5F7;
+            --text-secondary: #8E8E93;
+            --text-tertiary: #636366;
+            --text-disabled: #48484A;
+            
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-xxl: 48px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 999px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-elevated); }
+        ::-webkit-scrollbar-thumb { background: var(--text-disabled); border-radius: 3px; }
+        
+        /* 导航栏 */
+        .nav-rail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 220px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(24, 24, 27, 0.3) 0%, rgba(10, 10, 12, 0.1) 100%);
+            border-right: 0.5px solid rgba(255, 255, 255, 0.18);
+            padding: 32px 16px;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        .nav-logo {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 48px;
+            text-align: center;
+        }
+        
+        .nav-items { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 14px;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .nav-item:hover { background: rgba(10, 132, 255, 0.1); color: var(--text-primary); }
+        .nav-item.active { background: rgba(10, 132, 255, 0.2); color: var(--text-primary); border-color: rgba(10, 132, 255, 0.3); }
+        .nav-item svg { width: 24px; height: 24px; }
+        .nav-version { text-align: center; font-size: 11px; color: var(--text-disabled); }
+        
+        /* 主内容 */
+        .main-content { margin-left: 220px; min-height: 100vh; background: var(--bg-primary); }
+        
+        /* 搜索栏 */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 16px 48px;
+            padding: 8px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--text-disabled);
+            border-radius: var(--radius-md);
+            max-width: 500px;
+            transition: all 0.2s;
+        }
+        .search-bar:focus-within { border-color: var(--gradient-start); box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2); }
+        .search-bar svg { width: 20px; height: 20px; color: var(--text-tertiary); }
+        .search-bar input { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); font-size: 14px; }
+        .search-bar input::placeholder { color: var(--text-tertiary); }
+        
+        /* 分类 Tab */
+        .category-tabs {
+            display: flex;
+            gap: 12px;
+            padding: 12px 48px;
+        }
+        
+        .category-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            border: none;
+        }
+        
+        .category-chip svg { width: 18px; height: 18px; }
+        .category-chip:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+        
+        .category-chip.active {
+            color: white;
+        }
+        .category-chip.active.all { background: var(--gradient-start); }
+        .category-chip.active.movies { background: var(--gradient-start); }
+        .category-chip.active.tv { background: var(--gradient-end); }
+        .category-chip.active.anime { background: var(--gradient-accent); }
+        
+        /* Hero 轮播 */
+        .hero-carousel {
+            position: relative;
+            height: 480px;
+            overflow: hidden;
+        }
+        
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .carousel-slides {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        
+        .carousel-slide {
+            flex: 0 0 100%;
+            position: relative;
+            height: 100%;
+        }
+        
+        .slide-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(2px);
+            transform: scale(1.1);
+        }
+        
+        .slide-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg,
+                rgba(10, 10, 12, 0.5) 0%,
+                transparent 30%,
+                transparent 50%,
+                rgba(16, 18, 20, 0.8) 80%,
+                var(--bg-primary) 100%
+            );
+        }
+        
+        .slide-glow {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 350px;
+            height: 100%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        
+        .slide-glow.movies { background: linear-gradient(90deg, rgba(10, 132, 255, 0.12), transparent); }
+        .slide-glow.tv { background: linear-gradient(90deg, rgba(94, 92, 230, 0.12), transparent); }
+        .slide-glow.anime { background: linear-gradient(90deg, rgba(255, 107, 157, 0.12), transparent); }
+        
+        .slide-content {
+            position: absolute;
+            top: 50%;
+            left: 64px;
+            transform: translateY(-50%);
+            max-width: 650px;
+        }
+        
+        .slide-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 16px;
+        }
+        .slide-badge.movies { background: var(--gradient-start); }
+        .slide-badge.tv { background: var(--gradient-end); }
+        .slide-badge.anime { background: var(--gradient-accent); }
+        
+        .slide-title {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 54px;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .slide-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 16px;
+        }
+        
+        .slide-meta .rating { color: var(--rating-gold); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        
+        .slide-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 22px;
+            margin-bottom: 24px;
+            max-width: 550px;
+        }
+        
+        .slide-actions { display: flex; gap: 12px; }
+        
+        .btn-play {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: white;
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-play:hover { transform: scale(1.02); }
+        
+        .btn-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 20px;
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-detail:hover { background: rgba(255, 255, 255, 0.1); }
+        
+        /* 轮播导航 */
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            transform: translateY(-50%);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 16px;
+            pointer-events: none;
+        }
+        
+        .carousel-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(28, 28, 30, 0.9);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+        .carousel-btn:hover { background: rgba(44, 44, 46, 0.95); transform: scale(1.05); }
+        .carousel-btn svg { width: 28px; height: 28px; color: var(--text-primary); }
+        
+        /* 指示器 */
+        .carousel-indicators {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .indicator {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--text-disabled);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .indicator.active { width: 24px; background: var(--gradient-start); }
+        
+        /* 内容区域 */
+        .content-section { padding: 24px 0; }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 48px;
+            margin-bottom: 12px;
+        }
+        
+        .section-title { font-size: 24px; font-weight: 600; }
+        
+        .section-link {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .section-link:hover { color: var(--text-primary); }
+        
+        .media-row {
+            display: flex;
+            gap: 16px;
+            padding: 0 48px;
+            overflow-x: auto;
+            padding-bottom: 16px;
+        }
+        
+        .poster-card {
+            flex-shrink: 0;
+            width: 180px;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+        
+        .poster-card:hover, .poster-card.selected {
+            transform: scale(1.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(10, 132, 255, 0.3);
+        }
+        
+        .poster-card.selected {
+            border-color: var(--gradient-start);
+            box-shadow: 0 0 0 2px var(--gradient-start), 0 20px 40px rgba(10, 132, 255, 0.3);
+        }
+        
+        .poster-image {
+            width: 100%;
+            height: 270px;
+            object-fit: cover;
+            background: var(--bg-elevated);
+        }
+        
+        .poster-overlay { position: relative; }
+        
+        .poster-gradient {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(transparent, rgba(10, 10, 12, 0.9));
+        }
+        
+        .poster-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(10, 10, 12, 0.85);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--rating-gold);
+        }
+        
+        .poster-type {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .poster-type.movies { background: var(--gradient-start); }
+        .poster-type.tv { background: var(--gradient-end); }
+        .poster-type.anime { background: var(--gradient-accent); }
+        
+        .poster-focus-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gradient-start), var(--gradient-end), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .poster-card.selected .poster-focus-line { opacity: 1; }
+        
+        .poster-title {
+            padding: 8px 12px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        /* 分类标题区域 */
+        .category-section { padding: 24px 48px; }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .category-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .category-icon.movies { background: linear-gradient(135deg, rgba(10, 132, 255, 0.2), rgba(94, 92, 230, 0.2)); color: var(--gradient-start); }
+        .category-icon.tv { background: linear-gradient(135deg, rgba(94, 92, 230, 0.2), rgba(255, 107, 157, 0.2)); color: var(--gradient-end); }
+        .category-icon.anime { background: linear-gradient(135deg, rgba(255, 107, 157, 0.2), rgba(255, 214, 10, 0.2)); color: var(--gradient-accent); }
+        
+        .category-icon svg { width: 24px; height: 24px; }
+        
+        .category-info h2 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .category-info p { color: var(--text-secondary); font-size: 14px; }
+        
+        /* 特色卡片 */
+        .featured-card {
+            display: flex;
+            gap: 24px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            margin: 0 48px 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .featured-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(10, 132, 255, 0.3);
+        }
+        
+        .featured-poster {
+            width: 140px;
+            height: 210px;
+            border-radius: var(--radius-md);
+            object-fit: cover;
+        }
+        
+        .featured-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        
+        .featured-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+            width: fit-content;
+        }
+        
+        .featured-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+        
+        .featured-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        
+        .featured-meta .rating { color: var(--rating-gold); font-weight: 600; }
+        
+        .featured-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 48px;
+            border-top: 1px solid var(--bg-elevated);
+            color: var(--text-tertiary);
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="nav-rail">
+        <div class="nav-logo">MovieCode</div>
+        <div class="nav-items">
+            <div class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+                <span>首页</span>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                    <line x1="7" y1="2" x2="7" y2="22"/>
+                    <line x1="17" y1="2" x2="17" y2="22"/>
+                </svg>
+                <span>电影</span>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
+                    <polyline points="17,2 12,7 7,2"/>
+                </svg>
+                <span>电视剧</span>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                </svg>
+                <span>动漫</span>
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4"/>
+                </svg>
+                <span>设置</span>
+            </div>
+        </div>
+        <div class="nav-version">v1.0.0</div>
+    </nav>
+    
+    <!-- 主内容 -->
+    <main class="main-content">
+        <!-- 搜索栏 -->
+        <div class="search-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="搜索电影、电视剧、动漫...">
+        </div>
+        
+        <!-- 分类 Tab -->
+        <div class="category-tabs">
+            <button class="category-chip active all" onclick="switchCategory('all')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                </svg>
+                推荐
+            </button>
+            <button class="category-chip movies" onclick="switchCategory('movies')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                    <line x1="7" y1="2" x2="7" y2="22"/>
+                    <line x1="17" y1="2" x2="17" y2="22"/>
+                </svg>
+                电影
+            </button>
+            <button class="category-chip tv" onclick="switchCategory('tv')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
+                    <polyline points="17,2 12,7 7,2"/>
+                </svg>
+                电视剧
+            </button>
+            <button class="category-chip anime" onclick="switchCategory('anime')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                </svg>
+                动漫
+            </button>
+        </div>
+        
+        <!-- Hero 轮播 -->
+        <div class="hero-carousel">
+            <div class="carousel-container">
+                <div class="carousel-slides" id="carouselSlides">
+                    <!-- Slide 1: 电影 -->
+                    <div class="carousel-slide" data-type="movies">
+                        <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1920&q=80')"></div>
+                        <div class="slide-gradient"></div>
+                        <div class="slide-glow movies"></div>
+                        <div class="slide-content">
+                            <span class="slide-badge movies">电影</span>
+                            <h1 class="slide-title">星际穿越</h1>
+                            <div class="slide-meta">
+                                <span>2014</span>
+                                <span>•</span>
+                                <span class="rating">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                    </svg>
+                                    8.7
+                                </span>
+                                <span>•</span>
+                                <span>科幻</span>
+                                <span>•</span>
+                                <span>冒险</span>
+                            </div>
+                            <p class="slide-desc">一队探险家利用他们针对虫洞的新发现，超越人类对于太空旅行的极限，从而开始在广袤的宇宙中进行星际航行的故事。</p>
+                            <div class="slide-actions">
+                                <button class="btn-play">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5,3 19,12 5,21"/>
+                                    </svg>
+                                    立即播放
+                                </button>
+                                <button class="btn-detail">详情</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 2: 电视剧 -->
+                    <div class="carousel-slide" data-type="tv">
+                        <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=1920&q=80')"></div>
+                        <div class="slide-gradient"></div>
+                        <div class="slide-glow tv"></div>
+                        <div class="slide-content">
+                            <span class="slide-badge tv">电视剧</span>
+                            <h1 class="slide-title">绝命毒师 第五季</h1>
+                            <div class="slide-meta">
+                                <span>2012</span>
+                                <span>•</span>
+                                <span class="rating">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                    </svg>
+                                    9.2
+                                </span>
+                                <span>•</span>
+                                <span>犯罪</span>
+                                <span>•</span>
+                                <span>剧情</span>
+                            </div>
+                            <p class="slide-desc">讲述了高中化学教师沃尔特·怀特在得知自己身患绝症之后，为了给家人留下财产，利用自己超凡的化学知识制造毒品，并成为顶级毒枭的故事。</p>
+                            <div class="slide-actions">
+                                <button class="btn-play">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5,3 19,12 5,21"/>
+                                    </svg>
+                                    立即播放
+                                </button>
+                                <button class="btn-detail">详情</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 3: 动漫 -->
+                    <div class="carousel-slide" data-type="anime">
+                        <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=1920&q=80')"></div>
+                        <div class="slide-gradient"></div>
+                        <div class="slide-glow anime"></div>
+                        <div class="slide-content">
+                            <span class="slide-badge anime">动漫</span>
+                            <h1 class="slide-title">进击的巨人 最终季</h1>
+                            <div class="slide-meta">
+                                <span>2020</span>
+                                <span>•</span>
+                                <span class="rating">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                    </svg>
+                                    9.1
+                                </span>
+                                <span>•</span>
+                                <span>热血</span>
+                                <span>•</span>
+                                <span>战斗</span>
+                            </div>
+                            <p class="slide-desc">在遥远的过去，人类曾一度因被巨人捕食而崩溃。幸存下来的人们建造了三重巨大的城墙来防御巨人的入侵，展现了人类与巨人之间的史诗级对决。</p>
+                            <div class="slide-actions">
+                                <button class="btn-play">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5,3 19,12 5,21"/>
+                                    </svg>
+                                    立即播放
+                                </button>
+                                <button class="btn-detail">详情</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 4: 电影 -->
+                    <div class="carousel-slide" data-type="movies">
+                        <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80')"></div>
+                        <div class="slide-gradient"></div>
+                        <div class="slide-glow movies"></div>
+                        <div class="slide-content">
+                            <span class="slide-badge movies">电影</span>
+                            <h1 class="slide-title">盗梦空间</h1>
+                            <div class="slide-meta">
+                                <span>2010</span>
+                                <span>•</span>
+                                <span class="rating">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                    </svg>
+                                    8.5
+                                </span>
+                                <span>•</span>
+                                <span>科幻</span>
+                                <span>•</span>
+                                <span>动作</span>
+                            </div>
+                            <p class="slide-desc">一个造梦师团队，通过进入他人梦境来窃取秘密信息。然而，一个危险的敌人阻挠着他们的计划...</p>
+                            <div class="slide-actions">
+                                <button class="btn-play">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5,3 19,12 5,21"/>
+                                    </svg>
+                                    立即播放
+                                </button>
+                                <button class="btn-detail">详情</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Slide 5: 电视剧 -->
+                    <div class="carousel-slide" data-type="tv">
+                        <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=1920&q=80')"></div>
+                        <div class="slide-gradient"></div>
+                        <div class="slide-glow tv"></div>
+                        <div class="slide-content">
+                            <span class="slide-badge tv">电视剧</span>
+                            <h1 class="slide-title">权力的游戏 第八季</h1>
+                            <div class="slide-meta">
+                                <span>2019</span>
+                                <span>•</span>
+                                <span class="rating">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                    </svg>
+                                    9.1
+                                </span>
+                                <span>•</span>
+                                <span>奇幻</span>
+                                <span>•</span>
+                                <span>史诗</span>
+                            </div>
+                            <p class="slide-desc">故事背景是一个虚构的世界，主要讲述贵族家族之间为了争夺铁王座而进行的权力斗争。</p>
+                            <div class="slide-actions">
+                                <button class="btn-play">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5,3 19,12 5,21"/>
+                                    </svg>
+                                    立即播放
+                                </button>
+                                <button class="btn-detail">详情</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 导航按钮 -->
+                <div class="carousel-nav">
+                    <button class="carousel-btn" onclick="prevSlide()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15,18 9,12 15,6"/>
+                        </svg>
+                    </button>
+                    <button class="carousel-btn" onclick="nextSlide()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9,18 15,12 9,6"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- 指示器 -->
+                <div class="carousel-indicators" id="indicators"></div>
+            </div>
+        </div>
+        
+        <!-- 分类内容区域 -->
+        <div id="categoryContent">
+            <!-- 推荐内容 -->
+            <div id="content-all" class="category-content">
+                <section class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">热门电影</h2>
+                        <span class="section-link">查看全部 →</span>
+                    </div>
+                    <div class="media-row" id="moviesRow-all"></div>
+                </section>
+                
+                <section class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">热门电视剧</h2>
+                        <span class="section-link">查看全部 →</span>
+                    </div>
+                    <div class="media-row" id="tvRow-all"></div>
+                </section>
+            </div>
+            
+            <!-- 电影内容 -->
+            <div id="content-movies" class="category-content" style="display: none;">
+                <div class="category-section">
+                    <div class="category-header">
+                        <div class="category-icon movies">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                                <line x1="7" y1="2" x2="7" y2="22"/>
+                                <line x1="17" y1="2" x2="17" y2="22"/>
+                            </svg>
+                        </div>
+                        <div class="category-info">
+                            <h2>电影</h2>
+                            <p>最新最热的电影资源</p>
+                        </div>
+                    </div>
+                </div>
+                <section class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">热门电影</h2>
+                        <span class="section-link">查看全部 →</span>
+                    </div>
+                    <div class="media-row" id="moviesRow-movies"></div>
+                </section>
+            </div>
+            
+            <!-- 电视剧内容 -->
+            <div id="content-tv" class="category-content" style="display: none;">
+                <div class="category-section">
+                    <div class="category-header">
+                        <div class="category-icon tv">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"/>
+                                <polyline points="17,2 12,7 7,2"/>
+                            </svg>
+                        </div>
+                        <div class="category-info">
+                            <h2>电视剧</h2>
+                            <p>高清流畅的剧集体验</p>
+                        </div>
+                    </div>
+                </div>
+                <section class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">热门电视剧</h2>
+                        <span class="section-link">查看全部 →</span>
+                    </div>
+                    <div class="media-row" id="moviesRow-tv"></div>
+                </section>
+            </div>
+            
+            <!-- 动漫内容 -->
+            <div id="content-anime" class="category-content" style="display: none;">
+                <div class="category-section">
+                    <div class="category-header">
+                        <div class="category-icon anime">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                            </svg>
+                        </div>
+                        <div class="category-info">
+                            <h2>动漫</h2>
+                            <p>热血青春的二次元世界</p>
+                        </div>
+                    </div>
+                </div>
+                <section class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">热门动漫</h2>
+                        <span class="section-link">查看全部 →</span>
+                    </div>
+                    <div class="media-row" id="moviesRow-anime"></div>
+                </section>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>MovieCode TV UI Design System v1.1 - 支持分类筛选和 Hero 轮播</p>
+        </footer>
+    </main>
+    
+    <script>
+        // 轮播状态
+        let currentSlide = 0;
+        const totalSlides = 5;
+        let autoPlayInterval;
+        
+        // 初始化指示器
+        function initIndicators() {
+            const container = document.getElementById('indicators');
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('div');
+                indicator.className = 'indicator' + (i === 0 ? ' active' : '');
+                indicator.onclick = () => goToSlide(i);
+                container.appendChild(indicator);
+            }
+        }
+        
+        // 更新轮播
+        function updateCarousel() {
+            const slides = document.getElementById('carouselSlides');
+            slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            // 更新指示器
+            document.querySelectorAll('.indicator').forEach((ind, i) => {
+                ind.className = 'indicator' + (i === currentSlide ? ' active' : '');
+            });
+        }
+        
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            updateCarousel();
+        }
+        
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+            updateCarousel();
+        }
+        
+        function goToSlide(index) {
+            currentSlide = index;
+            updateCarousel();
+            resetAutoPlay();
+        }
+        
+        // 自动播放
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(nextSlide, 6000);
+        }
+        
+        function resetAutoPlay() {
+            clearInterval(autoPlayInterval);
+            startAutoPlay();
+        }
+        
+        // 分类切换
+        function switchCategory(category) {
+            // 更新 Tab
+            document.querySelectorAll('.category-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            document.querySelector(`.category-chip.${category}`).classList.add('active');
+            
+            // 更新内容
+            document.querySelectorAll('.category-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(`content-${category}`).style.display = 'block';
+            
+            // 渲染对应分类的数据
+            renderPosters(category);
+        }
+        
+        // 模拟数据
+        const movieData = [
+            { title: '星际穿越', rating: 8.7, type: 'movies', image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop' },
+            { title: '盗梦空间', rating: 8.5, type: 'movies', image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop' },
+            { title: '肖申克的救赎', rating: 9.0, type: 'movies', image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&h=600&fit=crop' },
+            { title: '泰坦尼克号', rating: 8.8, type: 'movies', image: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=400&h=600&fit=crop' },
+            { title: '阿凡达', rating: 8.6, type: 'movies', image: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=400&h=600&fit=crop' },
+            { title: '搏击俱乐部', rating: 8.4, type: 'movies', image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=400&h=600&fit=crop' },
+            { title: '黑客帝国', rating: 8.7, type: 'movies', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=600&fit=crop' },
+            { title: '低俗小说', rating: 8.9, type: 'movies', image: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&h=600&fit=crop' },
+        ];
+        
+        const tvData = [
+            { title: '绝命毒师', rating: 9.2, type: 'tv', image: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400&h=600&fit=crop' },
+            { title: '权力的游戏', rating: 9.1, type: 'tv', image: 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=400&h=600&fit=crop' },
+            { title: '黑道家族', rating: 8.9, type: 'tv', image: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=400&h=600&fit=crop' },
+            { title: '风骚律师', rating: 8.8, type: 'tv', image: 'https://images.unsplash.com/photo-1487088678257-3a541e6e3922?w=400&h=600&fit=crop' },
+            { title: '火线', rating: 9.0, type: 'tv', image: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop' },
+            { title: '广告狂人', rating: 8.7, type: 'tv', image: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop' },
+            { title: '老友记', rating: 8.9, type: 'tv', image: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=400&h=600&fit=crop' },
+            { title: '生活大爆炸', rating: 8.5, type: 'tv', image: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=400&h=600&fit=crop' },
+        ];
+        
+        // 渲染海报卡片
+        function renderPoster(item) {
+            return `
+                <div class="poster-card">
+                    <div class="poster-overlay">
+                        <img class="poster-image" src="${item.image}" alt="${item.title}">
+                        <div class="poster-gradient"></div>
+                        <span class="poster-badge">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                            </svg>
+                            ${item.rating}
+                        </span>
+                        <span class="poster-type ${item.type}">
+                            ${item.type === 'movies' ? '电影' : item.type === 'tv' ? '剧集' : '动漫'}
+                        </span>
+                        <div class="poster-focus-line"></div>
+                    </div>
+                    <div class="poster-title">${item.title}</div>
+                </div>
+            `;
+        }
+        
+        function renderPosters(category) {
+            const data = category === 'all' ? [...movieData, ...tvData].slice(0, 8) :
+                        category === 'movies' ? movieData :
+                        category === 'tv' || category === 'anime' ? tvData : [];
+            
+            const rowId = category === 'all' ? 
+                (document.getElementById('content-all').style.display !== 'none' ? 'moviesRow-all' : 'tvRow-all') :
+                `moviesRow-${category}`;
+            
+            if (document.getElementById(rowId)) {
+                document.getElementById(rowId).innerHTML = data.map(renderPoster).join('');
+            }
+            
+            // 全部分类时渲染两行
+            if (category === 'all') {
+                document.getElementById('moviesRow-all').innerHTML = movieData.slice(0, 6).map(renderPoster).join('');
+                document.getElementById('tvRow-all').innerHTML = tvData.slice(0, 6).map(renderPoster).join('');
+            }
+        }
+        
+        // 键盘导航
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            else if (e.key === 'ArrowLeft') prevSlide();
+            else if (e.key === 'Enter') console.log('播放选中项');
+        });
+        
+        // 初始化
+        initIndicators();
+        startAutoPlay();
+        renderPosters('all');
+    </script>
+</body>
+</html>

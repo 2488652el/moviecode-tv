@@ -1,22 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Apple TV Dark Theme Colors -->
-    <color name="tv_background">#101214</color>
-    <color name="card_background">#1C1C1E</color>
-    <color name="card_background_selected">#2C2C2E</color>
+    <!-- 增强版 Apple TV Dark Theme Colors -->
     
-    <color name="primary">#0A84FF</color>
-    <color name="primary_dark">#0066CC</color>
-    <color name="accent">#FF9500</color>
+    <!-- 背景层次 -->
+    <color name="background_deep">#FF0A0A0C</color>
+    <color name="background_primary">#FF101214</color>
+    <color name="background_elevated">#FF18181B</color>
+    <color name="card_background">#FF1C1C1E</color>
+    <color name="card_background_hover">#FF2C2C2E</color>
     
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#8E8E93</color>
-    <color name="text_tertiary">#636366</color>
+    <!-- 渐变色 -->
+    <color name="gradient_start">#FF0A84FF</color>
+    <color name="gradient_end">#FF5E5CE6</color>
+    <color name="gradient_accent">#FFFF6B9D</color>
     
-    <color name="yellow">#FFD60A</color>
-    <color name="green">#30D158</color>
-    <color name="red">#FF453A</color>
+    <!-- 主色调 -->
+    <color name="primary">#FF0A84FF</color>
+    <color name="primary_dark">#FF0066CC</color>
+    <color name="accent">#FF5E5CE6</color>
     
-    <color name="divider">#38383A</color>
+    <!-- 语义色彩 -->
+    <color name="rating_gold">#FFFFD60A</color>
+    <color name="success_green">#FF32D74B</color>
+    <color name="warning_amber">#FFFFD60A</color>
+    <color name="error_red">#FFFF453A</color>
+    <color name="info_blue">#FF0A84FF</color>
+    
+    <!-- 文字色彩 -->
+    <color name="text_primary">#FFF5F5F7</color>
+    <color name="text_secondary">#FF8E8E93</color>
+    <color name="text_tertiary">#FF636366</color>
+    <color name="text_disabled">#FF48484A</color>
+    
+    <!-- 玻璃态 -->
+    <color name="glass_overlay">#40FFFFFF</color>
+    <color name="glass_border">#30FFFFFF</color>
+    
+    <!-- 分隔线 -->
+    <color name="divider">#FF38383A</color>
     <color name="overlay">#80101214</color>
+    
+    <!-- 向后兼容 -->
+    <color name="tv_background">@color/background_primary</color>
+    <color name="yellow">@color/rating_gold</color>
+    <color name="green">@color/success_green</color>
+    <color name="red">@color/error_red</color>
 </resources>

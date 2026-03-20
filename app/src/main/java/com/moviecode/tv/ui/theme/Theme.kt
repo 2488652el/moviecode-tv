@@ -6,21 +6,37 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val TvColorScheme = darkColorScheme(
-    primary = Primary,
+// 增强版深色配色方案
+private val EnhancedDarkColorScheme = darkColorScheme(
+    // 主色调
+    primary = GradientStart,
     onPrimary = Color.White,
-    primaryContainer = PrimaryDark,
-    secondary = Accent,
+    primaryContainer = GradientEnd,
+    onPrimaryContainer = Color.White,
+
+    // 次要色调
+    secondary = GradientEnd,
     onSecondary = Color.White,
-    background = TvBackground,
+    secondaryContainer = GradientAccent,
+    onSecondaryContainer = Color.White,
+
+    // 背景色
+    background = BackgroundPrimary,
     onBackground = TextPrimary,
-    surface = CardBackground,
+    surface = BackgroundCard,
     onSurface = TextPrimary,
-    surfaceVariant = CardBackgroundSelected,
+
+    // 表面变体
+    surfaceVariant = BackgroundCardHover,
     onSurfaceVariant = TextSecondary,
-    error = Red,
+
+    // 错误色
+    error = ErrorRed,
     onError = Color.White,
-    outline = Divider
+
+    // 轮廓
+    outline = Divider,
+    outlineVariant = GlassBorder
 )
 
 @Composable
@@ -28,7 +44,7 @@ fun MovieCodeTVTheme(
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = TvColorScheme,
+        colorScheme = EnhancedDarkColorScheme,
         content = content
     )
 }

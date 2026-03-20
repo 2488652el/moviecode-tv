@@ -1,6 +1,7 @@
 package com.moviecode.tv.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -31,7 +35,7 @@ import com.moviecode.tv.domain.model.Episode
 import com.moviecode.tv.domain.model.MediaItem
 import com.moviecode.tv.domain.model.MediaType
 import com.moviecode.tv.domain.model.Season
-import com.moviecode.tv.ui.components.MediaPosterCard
+import com.moviecode.tv.ui.components.EnhancedMediaPosterCard
 import com.moviecode.tv.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,7 +105,6 @@ class DetailViewModel @Inject constructor(
                         mediaRepository.getSimilarTvShows(tmdbId).getOrNull()?.let {
                             _similar.value = it
                         }
-                        // Load first season by default
                         _selectedSeason.value = 1
                     }
                 }
@@ -121,7 +124,6 @@ class DetailViewModel @Inject constructor(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
     onBack: () -> Unit,
@@ -136,132 +138,48 @@ fun DetailScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val selectedSeason by viewModel.selectedSeason.collectAsState()
     
-    Box(modifier = Modifier.fillMaxSize().background(TvBackground)) {
+    Box(modifier = Modifier.fillMaxSize().background(BackgroundPrimary)) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
-                color = Primary
+                color = GradientStart
             )
         } else {
             mediaItem?.let { item ->
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Hero with backdrop
+                    // Hero 区域
                     item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(500.dp)
-                        ) {
-                            AsyncImage(
-                                model = item.backdropPath ?: item.posterPath,
-                                contentDescription = item.title,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                            
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        Brush.verticalGradient(
-                                            colors = listOf(
-                                                Color.Transparent,
-                                                TvBackground.copy(alpha = 0.95f),
-                                                TvBackground
-                                            )
-                                        )
-                                    )
-                            )
-                            
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .padding(32.dp)
-                            ) {
-                                Text(
-                                    text = item.title,
-                                    color = TextPrimary,
-                                    fontSize = 42.sp
-                                )
-                                
-                                Spacer(modifier = Modifier.height(8.dp))
-                                
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    item.year?.let {
-                                        Text(text = "$it", color = TextSecondary, fontSize = 16.sp)
-                                        Text(text = " • ", color = TextSecondary)
-                                    }
-                                    item.rating.let {
-                                        Text(text = String.format("%.1f", it), color = Yellow, fontSize = 16.sp)
-                                        Text(text = " • ", color = TextSecondary)
-                                    }
-                                    item.runtime?.let {
-                                        Text(text = "${it} min", color = TextSecondary, fontSize = 16.sp)
-                                    }
-                                    if (item.type == MediaType.TV_SHOW) {
-                                        item.seasonCount?.let {
-                                            Text(text = " • $it Seasons", color = TextSecondary, fontSize = 16.sp)
-                                        }
-                                    }
-                                }
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                Row {
-                                    Button(
-                                        onClick = { 
-                                            item.filePath?.let { onPlay(it) }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Play")
-                                    }
-                                    
-                                    Spacer(Modifier.width(16.dp))
-                                    
-                                    OutlinedButton(
-                                        onClick = { },
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text("+ Add to List")
-                                    }
-                                }
-                            }
-                        }
+                        EnhancedDetailHero(
+                            item = item,
+                            onPlay = { item.filePath?.let { onPlay(it) } }
+                        )
                     }
                     
-                    // Overview
-                    item {
-                        item.overview?.let { overview ->
+                    // 简介
+                    item.overview?.let { overview ->
+                        item {
                             Text(
                                 text = overview,
                                 color = TextSecondary,
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                                fontSize = 15.sp,
+                                lineHeight = 24.sp,
+                                modifier = Modifier.padding(horizontal = 48.dp, vertical = 16.dp)
                             )
                         }
                     }
                     
-                    // Cast
+                    // 演职员
                     if (cast.isNotEmpty()) {
                         item {
-                            Text(
-                                text = "Cast",
-                                color = TextPrimary,
-                                fontSize = 24.sp,
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                            )
+                            SectionHeader(title = "演职员")
                         }
                         
                         item {
                             LazyRow(
-                                contentPadding = PaddingValues(horizontal = 32.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                contentPadding = PaddingValues(horizontal = 48.dp),
+                                horizontalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
                                 items(cast) { member ->
                                     CastCard(member = member)
@@ -270,71 +188,48 @@ fun DetailScreen(
                         }
                     }
                     
-                    // Seasons and Episodes (for TV shows)
+                    // 剧集（电视剧）
                     if (item.type == MediaType.TV_SHOW) {
                         item {
                             Spacer(modifier = Modifier.height(32.dp))
-                            Text(
-                                text = "Episodes",
-                                color = TextPrimary,
-                                fontSize = 24.sp,
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                            SectionHeader(title = "剧集")
+                        }
+                        
+                        item {
+                            SeasonSelector(
+                                seasonCount = item.seasonCount ?: 1,
+                                selectedSeason = selectedSeason ?: 1,
+                                onSeasonSelected = { viewModel.selectSeason(it) }
                             )
                         }
                         
-                        // Season selector
-                        item {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 32.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items((1..(item.seasonCount ?: 1)).toList()) { seasonNum ->
-                                    FilterChip(
-                                        selected = selectedSeason == seasonNum,
-                                        onClick = { viewModel.selectSeason(seasonNum) },
-                                        label = { Text("Season $seasonNum") },
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = Primary,
-                                            selectedLabelColor = TextPrimary
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                        
-                        // Episodes list
                         items(episodes) { episode ->
-                            EpisodeCard(
+                            EnhancedEpisodeCard(
                                 episode = episode,
                                 onClick = { episode.filePath?.let { onPlay(it) } }
                             )
                         }
                     }
                     
-                    // Similar
+                    // 相关推荐
                     if (similar.isNotEmpty()) {
                         item {
                             Spacer(modifier = Modifier.height(32.dp))
-                            Text(
-                                text = "Similar",
-                                color = TextPrimary,
-                                fontSize = 24.sp,
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                            )
+                            SectionHeader(title = "相关推荐")
                         }
                         
                         item {
                             LazyRow(
-                                contentPadding = PaddingValues(horizontal = 32.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                contentPadding = PaddingValues(horizontal = 48.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(similar) { media ->
-                                    MediaPosterCard(
+                                    EnhancedMediaPosterCard(
                                         item = media,
                                         isSelected = false,
                                         onFocus = {},
                                         onClick = { },
-                                        modifier = Modifier.width(140.dp)
+                                        modifier = Modifier.width(160.dp)
                                     )
                                 }
                             }
@@ -346,16 +241,19 @@ fun DetailScreen(
             }
         }
         
-        // Back button
-        IconButton(
+        // 返回按钮
+        FilledIconButton(
             onClick = onBack,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .padding(16.dp)
+                .padding(24.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = BackgroundCard.copy(alpha = 0.9f)
+            )
         ) {
             Icon(
                 Icons.Default.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = "返回",
                 tint = TextPrimary
             )
         }
@@ -363,7 +261,219 @@ fun DetailScreen(
 }
 
 @Composable
-fun CastCard(member: CastMember) {
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        color = TextPrimary,
+        fontSize = 24.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(horizontal = 48.dp, vertical = 16.dp)
+    )
+}
+
+@Composable
+private fun EnhancedDetailHero(
+    item: MediaItem,
+    onPlay: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(500.dp)
+    ) {
+        // 背景图
+        AsyncImage(
+            model = item.backdropPath ?: item.posterPath,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        
+        // 多层渐变
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            BackgroundPrimary.copy(alpha = 0.95f),
+                            BackgroundPrimary
+                        )
+                    )
+                )
+        )
+        
+        // 左侧光晕
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(400.dp)
+                .align(Alignment.CenterStart)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            GradientStart.copy(alpha = 0.1f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+        
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(48.dp)
+        ) {
+            // 媒体类型标签
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = when (item.type) {
+                    MediaType.MOVIE -> GradientStart
+                    MediaType.TV_SHOW -> GradientEnd
+                    MediaType.ANIME -> GradientAccent
+                }
+            ) {
+                Text(
+                    text = when (item.type) {
+                        MediaType.MOVIE -> "电影"
+                        MediaType.TV_SHOW -> "电视剧"
+                        MediaType.ANIME -> "动漫"
+                    },
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // 标题
+            Text(
+                text = item.title,
+                color = Color.White,
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 48.sp
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // 元信息
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                item.year?.let {
+                    Text(text = "$it", color = TextSecondary, fontSize = 15.sp)
+                    Text(text = " • ", color = TextTertiary)
+                }
+                
+                if (item.rating > 0) {
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = null,
+                        tint = RatingGold,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = " ${String.format("%.1f", item.rating)} ",
+                        color = RatingGold,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(text = " • ", color = TextTertiary)
+                }
+                
+                item.runtime?.let {
+                    Text(text = "${it} 分钟", color = TextSecondary, fontSize = 15.sp)
+                    Text(text = " • ", color = TextTertiary)
+                }
+                
+                if (item.type == MediaType.TV_SHOW) {
+                    item.seasonCount?.let {
+                        Text(text = "$it 季", color = TextSecondary, fontSize = 15.sp)
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // 操作按钮
+            Row {
+                Button(
+                    onClick = onPlay,
+                    colors = ButtonDefaults.buttonColors(containerColor = GradientStart),
+                    contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "播放",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                
+                Spacer(Modifier.width(16.dp))
+                
+                OutlinedButton(
+                    onClick = { },
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(TextSecondary.copy(alpha = 0.5f))
+                        )
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "加入片单",
+                        fontSize = 15.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeasonSelector(
+    seasonCount: Int,
+    selectedSeason: Int,
+    onSeasonSelected: (Int) -> Unit
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 48.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items((1..seasonCount).toList()) { num ->
+            FilterChip(
+                selected = selectedSeason == num,
+                onClick = { onSeasonSelected(num) },
+                label = { Text("第 $num 季") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = GradientStart,
+                    selectedLabelColor = Color.White,
+                    containerColor = BackgroundCard,
+                    labelColor = TextSecondary
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun CastCard(member: CastMember) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.width(100.dp)
@@ -373,7 +483,8 @@ fun CastCard(member: CastMember) {
             contentDescription = member.name,
             modifier = Modifier
                 .size(80.dp)
-                .clip(RoundedCornerShape(40.dp)),
+                .clip(RoundedCornerShape(40.dp))
+                .background(BackgroundCard),
             contentScale = ContentScale.Crop
         )
         
@@ -382,76 +493,104 @@ fun CastCard(member: CastMember) {
         Text(
             text = member.name,
             color = TextPrimary,
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         
         member.character?.let {
             Text(
                 text = it,
-                color = TextSecondary,
-                fontSize = 10.sp
+                color = TextTertiary,
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
 }
 
 @Composable
-fun EpisodeCard(episode: Episode, onClick: () -> Unit) {
-    Row(
+private fun EnhancedEpisodeCard(
+    episode: Episode,
+    onClick: () -> Unit
+) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 8.dp)
+            .padding(horizontal = 48.dp, vertical = 8.dp)
             .focusable()
-            .clip(RoundedCornerShape(8.dp))
-            .background(CardBackground)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clip(RoundedCornerShape(12.dp))
+            .background(BackgroundCard)
+            .border(
+                width = 1.dp,
+                color = BackgroundElevated,
+                shape = RoundedCornerShape(12.dp)
+            ),
+        colors = CardDefaults.cardColors(containerColor = BackgroundCard),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        // Episode thumbnail
-        AsyncImage(
-            model = episode.stillPath,
-            contentDescription = episode.title,
-            modifier = Modifier
-                .width(200.dp)
-                .height(120.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "${episode.episodeNumber}. ${episode.title}",
-                color = TextPrimary,
-                fontSize = 16.sp
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 剧集缩略图
+            AsyncImage(
+                model = episode.stillPath,
+                contentDescription = episode.title,
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(BackgroundElevated),
+                contentScale = ContentScale.Crop
             )
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.width(20.dp))
             
-            episode.airDate?.let {
-                Text(text = it, color = TextTertiary, fontSize = 12.sp)
-            }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            episode.overview?.let { overview ->
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = overview.take(150) + if (overview.length > 150) "..." else "",
-                    color = TextSecondary,
-                    fontSize = 14.sp
+                    text = "${episode.episodeNumber}. ${episode.title}",
+                    color = TextPrimary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
+                
+                Spacer(modifier = Modifier.height(6.dp))
+                
+                episode.airDate?.let {
+                    Text(text = it, color = TextTertiary, fontSize = 12.sp)
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                episode.overview?.let { overview ->
+                    Text(
+                        text = overview.take(120) + if (overview.length > 120) "..." else "",
+                        color = TextSecondary,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
+                    )
+                }
             }
-        }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        Button(
-            onClick = onClick,
-            colors = ButtonDefaults.buttonColors(containerColor = Primary)
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null)
-            Text("Play")
+            
+            Spacer(modifier = Modifier.width(20.dp))
+            
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(containerColor = GradientStart),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(
+                    Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text("播放", fontSize = 14.sp)
+            }
         }
     }
 }
