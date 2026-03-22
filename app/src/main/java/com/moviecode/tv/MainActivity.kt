@@ -62,6 +62,7 @@ fun MovieCodeTVApp() {
                         }
                     }
                 )
+
             }
             
             composable(
@@ -69,30 +70,35 @@ fun MovieCodeTVApp() {
             ) { backStackEntry ->
                 val tmdbId = backStackEntry.arguments?.getString("tmdbId")?.toIntOrNull() ?: 0
                 val mediaType = backStackEntry.arguments?.getString("mediaType") ?: "MOVIE"
-                
+
                 DetailScreen(
                     onBack = { navController.popBackStack() },
-                    onPlay = { videoPath ->
-                        navController.navigate("player/${java.net.URLEncoder.encode(videoPath, "UTF-8")}")
+                    onPlay = { videoPath, mediaId ->
+                        navController.navigate("player/${java.net.URLEncoder.encode(videoPath, "UTF-8")}/${mediaId}")
                     }
                 )
             }
             
             composable(
-                route = "player/{videoPath}"
+                route = "player/{videoPath}/{mediaId}"
             ) { backStackEntry ->
                 val videoPath = java.net.URLDecoder.decode(
                     backStackEntry.arguments?.getString("videoPath") ?: "",
                     "UTF-8"
                 )
+                val mediaId = backStackEntry.arguments?.getString("mediaId") ?: videoPath.hashCode().toString()
+                val title = backStackEntry.arguments?.getString("title") ?: "Now Playing"
+                
                 PlayerScreen(
                     videoPath = videoPath,
-                    title = "Now Playing",
+                    title = title,
+                    mediaId = mediaId,
                     onBack = { navController.popBackStack() }
                 )
             }
             
             composable("settings") {
+
                 selectedNavItem = NavigationItem.SETTINGS
                 SettingsScreen(
                     selectedNavItem = selectedNavItem,
@@ -100,6 +106,7 @@ fun MovieCodeTVApp() {
                         selectedNavItem = item
                         when (item) {
                             NavigationItem.HOME -> navController.navigate("home") {
+
                                 popUpTo("home") { inclusive = true }
                             }
                             else -> { }
@@ -107,6 +114,7 @@ fun MovieCodeTVApp() {
                     },
                     viewModel = androidx.hilt.navigation.compose.hiltViewModel()
                 )
+
             }
         }
     }
