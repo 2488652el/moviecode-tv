@@ -1,4 +1,4 @@
-package com.moviecode.tv.ui.screens
+﻿package com.moviecode.tv.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -34,6 +34,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.compose.AsyncImage
 import com.moviecode.tv.data.repository.MediaRepository
+import com.moviecode.tv.data.repository.ParentalControlRepository
 import com.moviecode.tv.domain.model.MediaItem
 import com.moviecode.tv.domain.model.MediaType
 import com.moviecode.tv.ui.components.EnhancedMediaPosterCard
@@ -50,7 +51,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// 常量定义
+// 甯搁噺瀹氫箟
 object HomeScreenConstants {
     const val SEARCH_DEBOUNCE_MS = 300L
     const val OVERVIEW_MAX_LENGTH = 200
@@ -61,33 +62,31 @@ object HomeScreenConstants {
 }
 
 /**
- * 媒体分类枚举
+ * 濯掍綋鍒嗙被鏋氫妇
  */
 enum class MediaCategory(val title: String, val mediaType: MediaType?) {
-    ALL("推荐", null),
-    MOVIES("电影", MediaType.MOVIE),
-    TV_SHOWS("电视剧", MediaType.TV_SHOW),
-    ANIME("动漫", MediaType.ANIME)
+    ALL("鎺ㄨ崘", null),
+    MOVIES("鐢靛奖", MediaType.MOVIE),
+    TV_SHOWS("鐢佃鍓?, MediaType.TV_SHOW),
+    ANIME("鍔ㄦ极", MediaType.ANIME)
 }
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val mediaRepository: MediaRepository
-) : ViewModel() {
+    private val mediaRepository: MediaRepository,`n    private val parentalControlRepository: ParentalControlRepository`n) : ViewModel() {
     
-    // 全部分类数据
+    // 鍏ㄩ儴鍒嗙被鏁版嵁
     private val _allPopularMovies = MutableStateFlow<List<MediaItem>>(emptyList())
     private val _allTopRatedMovies = MutableStateFlow<List<MediaItem>>(emptyList())
     private val _allPopularTvShows = MutableStateFlow<List<MediaItem>>(emptyList())
     private val _allTopRatedTvShows = MutableStateFlow<List<MediaItem>>(emptyList())
     
-    // 当前选中的分类
+    // 褰撳墠閫変腑鐨勫垎绫?
     private val _selectedCategory = MutableStateFlow(MediaCategory.ALL)
     val selectedCategory: StateFlow<MediaCategory> = _selectedCategory.asStateFlow()
     
-    // Hero 轮播数据（从所有分类中获取）
-    private val _heroItems = MutableStateFlow<List<MediaItem>>(emptyList())
-    val heroItems: StateFlow<List<MediaItem>> = _heroItems.asStateFlow()
+    // Hero 杞挱鏁版嵁锛堜粠鎵€鏈夊垎绫讳腑鑾峰彇锛?
+    private val _heroItems = MutableStateFlow<List<MediaItem>>(emptyList())`n    val heroItems: StateFlow<List<MediaItem>> = _heroItems.asStateFlow()`n    `n    // 家长控制过滤后的数据`n    private val _filteredHeroItems = MutableStateFlow<List<MediaItem>>(emptyList())`n    val filteredHeroItems: StateFlow<List<MediaItem>> = _filteredHeroItems.asStateFlow()
     
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -116,13 +115,13 @@ class HomeViewModel @Inject constructor(
         updateHeroItems()
     }
     
-    private fun updateHeroItems() {
+    private fun updateHeroItems() {`n        viewModelScope.launch {`n            val filteredItems = applyParentalFilter(_heroItems.value)`n            _filteredHeroItems.value = filteredItems`n        }
         val category = _selectedCategory.value
         val items = when (category) {
             MediaCategory.ALL -> (_allPopularMovies.value + _allPopularTvShows.value).take(10)
             MediaCategory.MOVIES -> _allPopularMovies.value
             MediaCategory.TV_SHOWS -> _allPopularTvShows.value
-            MediaCategory.ANIME -> _allPopularTvShows.value.take(5) // 动漫暂用剧集数据
+            MediaCategory.ANIME -> _allPopularTvShows.value.take(5) // 鍔ㄦ极鏆傜敤鍓ч泦鏁版嵁
         }
         _heroItems.value = items.take(10)
     }
@@ -155,7 +154,7 @@ class HomeViewModel @Inject constructor(
                     _allTopRatedTvShows.value = it
                 }
                 
-                // 初始化 Hero 数据
+                // 鍒濆鍖?Hero 鏁版嵁
                 updateHeroItems()
             } catch (e: Exception) {
                 _error.value = e.message ?: "Unknown error"
@@ -189,7 +188,7 @@ class HomeViewModel @Inject constructor(
         }
     }
     
-    fun clearError() {
+    private suspend fun applyParentalFilter(items: List<MediaItem>): List<MediaItem> {`n        return items.filter { parentalControlRepository.isContentAllowed(it) }`n    }`n`n    fun clearError() {
         _error.value = null
     }
     
@@ -206,7 +205,7 @@ fun HomeScreen(
     onNavItemSelected: (NavigationItem) -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    val heroItems by viewModel.heroItems.collectAsState()
+    val heroItems by viewModel.filteredHeroItems.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isSearching by viewModel.isSearching.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -223,7 +222,7 @@ fun HomeScreen(
         )
         
         Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
-            // 搜索栏
+            // 鎼滅储鏍?
             EnhancedSearchBar(
                 query = searchText,
                 onQueryChange = { 
@@ -236,7 +235,7 @@ fun HomeScreen(
                     .padding(horizontal = 48.dp, vertical = 16.dp)
             )
             
-            // 错误提示
+            // 閿欒鎻愮ず
             error?.let { errorMessage ->
                 ErrorBanner(
                     message = errorMessage,
@@ -248,7 +247,7 @@ fun HomeScreen(
                 )
             }
             
-            // 主内容区域
+            // 涓诲唴瀹瑰尯鍩?
             Box(modifier = Modifier.weight(1f)) {
                 when {
                     isLoading -> {
@@ -296,7 +295,7 @@ fun EnhancedSearchBar(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text("搜索电影、电视剧、动漫...", color = TextTertiary) },
+            placeholder = { Text("鎼滅储鐢靛奖銆佺數瑙嗗墽銆佸姩婕?..", color = TextTertiary) },
             leadingIcon = {
                 Icon(
                     Icons.Default.Search,
@@ -360,10 +359,10 @@ fun ErrorBanner(
                 modifier = Modifier.weight(1f)
             )
             TextButton(onClick = onRetry) {
-                Text("重试")
+                Text("閲嶈瘯")
             }
             TextButton(onClick = onDismiss) {
-                Text("关闭")
+                Text("鍏抽棴")
             }
         }
     }
@@ -382,7 +381,7 @@ fun SearchResultsView(
     ) {
         item {
             Text(
-                text = "搜索 \"$query\" 的结果",
+                text = "鎼滅储 \"$query\" 鐨勭粨鏋?,
                 color = TextPrimary,
                 fontSize = 24.sp,
                 modifier = Modifier.padding(horizontal = 48.dp, vertical = 8.dp)
@@ -406,8 +405,8 @@ fun SearchResultsView(
             item {
                 EmptyState(
                     icon = Icons.Default.SearchOff,
-                    title = "没有找到结果",
-                    message = "试试其他关键词",
+                    title = "娌℃湁鎵惧埌缁撴灉",
+                    message = "璇曡瘯鍏朵粬鍏抽敭璇?,
                     modifier = Modifier.padding(48.dp)
                 )
             }
@@ -436,7 +435,7 @@ fun SearchResultsView(
 }
 
 /**
- * 增强版首页内容（带分类筛选和 Hero 轮播）
+ * 澧炲己鐗堥椤靛唴瀹癸紙甯﹀垎绫荤瓫閫夊拰 Hero 杞挱锛?
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -454,16 +453,16 @@ fun EnhancedHomeContentView(
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        // ===== Hero 轮播区域 =====
+        // ===== Hero 杞挱鍖哄煙 =====
         item {
             Column {
-                // 分类筛选 Tab
+                // 鍒嗙被绛涢€?Tab
                 CategoryTabBar(
                     selectedCategory = selectedCategory,
                     onCategorySelected = onCategorySelected
                 )
                 
-                // Hero 轮播
+                // Hero 杞挱
                 if (heroItems.isNotEmpty()) {
                     HeroCarousel(
                         items = heroItems,
@@ -473,13 +472,13 @@ fun EnhancedHomeContentView(
             }
         }
         
-        // ===== 根据分类显示不同内容 =====
+        // ===== 鏍规嵁鍒嗙被鏄剧ず涓嶅悓鍐呭 =====
         when (selectedCategory) {
             MediaCategory.ALL -> {
-                // 推荐：混合显示
+                // 鎺ㄨ崘锛氭贩鍚堟樉绀?
                 item {
                     EnhancedMediaRow(
-                        title = "热门电影",
+                        title = "鐑棬鐢靛奖",
                         items = heroItems.filter { it.type == MediaType.MOVIE }.take(10),
                         selectedIndex = 0,
                         onItemSelected = {},
@@ -488,7 +487,7 @@ fun EnhancedHomeContentView(
                 }
                 item {
                     EnhancedMediaRow(
-                        title = "热门电视剧",
+                        title = "鐑棬鐢佃鍓?,
                         items = heroItems.filter { it.type == MediaType.TV_SHOW }.take(10),
                         selectedIndex = 0,
                         onItemSelected = {},
@@ -500,7 +499,7 @@ fun EnhancedHomeContentView(
             MediaCategory.MOVIES -> {
                 item {
                     EnhancedMediaRow(
-                        title = "热门电影",
+                        title = "鐑棬鐢靛奖",
                         items = heroItems.take(10),
                         selectedIndex = 0,
                         onItemSelected = {},
@@ -512,7 +511,7 @@ fun EnhancedHomeContentView(
             MediaCategory.TV_SHOWS -> {
                 item {
                     EnhancedMediaRow(
-                        title = "热门电视剧",
+                        title = "鐑棬鐢佃鍓?,
                         items = heroItems.take(10),
                         selectedIndex = 0,
                         onItemSelected = {},
@@ -524,7 +523,7 @@ fun EnhancedHomeContentView(
             MediaCategory.ANIME -> {
                 item {
                     EnhancedMediaRow(
-                        title = "热门动漫",
+                        title = "鐑棬鍔ㄦ极",
                         items = heroItems.take(10),
                         selectedIndex = 0,
                         onItemSelected = {},
@@ -539,7 +538,7 @@ fun EnhancedHomeContentView(
 }
 
 /**
- * 分类 Tab 栏
+ * 鍒嗙被 Tab 鏍?
  */
 @Composable
 fun CategoryTabBar(
@@ -563,7 +562,7 @@ fun CategoryTabBar(
 }
 
 /**
- * 分类筛选按钮
+ * 鍒嗙被绛涢€夋寜閽?
  */
 @Composable
 fun CategoryChip(
@@ -602,7 +601,7 @@ fun CategoryChip(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // 分类图标
+            // 鍒嗙被鍥炬爣
             Icon(
                 imageVector = when (category) {
                     MediaCategory.ALL -> Icons.Default.Home
@@ -628,7 +627,7 @@ fun CategoryChip(
 }
 
 /**
- * Hero 轮播组件
+ * Hero 杞挱缁勪欢
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -638,21 +637,21 @@ fun HeroCarousel(
 ) {
     if (items.isEmpty()) return
     
-    // 自动轮播状态
+    // 鑷姩杞挱鐘舵€?
     var currentPage by remember { mutableIntStateOf(0) }
     
-    // Pager 状态
+    // Pager 鐘舵€?
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { items.size }
     )
     
-    // 监听页面变化
+    // 鐩戝惉椤甸潰鍙樺寲
     LaunchedEffect(pagerState.currentPage) {
         currentPage = pagerState.currentPage
     }
     
-    // 自动轮播
+    // 鑷姩杞挱
     LaunchedEffect(Unit) {
         while (true) {
             delay(HomeScreenConstants.HERO_AUTO_SCROLL_INTERVAL_MS)
@@ -666,7 +665,7 @@ fun HeroCarousel(
             .fillMaxWidth()
             .height(HomeScreenConstants.HERO_HEIGHT)
     ) {
-        // 轮播内容
+        // 杞挱鍐呭
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize()
@@ -677,7 +676,7 @@ fun HeroCarousel(
             )
         }
         
-        // 底部渐变
+        // 搴曢儴娓愬彉
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -693,7 +692,7 @@ fun HeroCarousel(
                 )
         )
         
-        // 指示器
+        // 鎸囩ず鍣?
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -708,7 +707,7 @@ fun HeroCarousel(
             }
         }
         
-        // 左右导航按钮
+        // 宸﹀彸瀵艰埅鎸夐挳
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -716,7 +715,7 @@ fun HeroCarousel(
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // 左按钮
+            // 宸︽寜閽?
             Surface(
                 onClick = {
                     val prevPage = if (pagerState.currentPage > 0) 
@@ -732,14 +731,14 @@ fun HeroCarousel(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.ChevronLeft,
-                        contentDescription = "上一张",
+                        contentDescription = "涓婁竴寮?,
                         tint = TextPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
             }
             
-            // 右按钮
+            // 鍙虫寜閽?
             Surface(
                 onClick = {
                     val nextPage = (pagerState.currentPage + 1) % items.size
@@ -752,7 +751,7 @@ fun HeroCarousel(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.ChevronRight,
-                        contentDescription = "下一张",
+                        contentDescription = "涓嬩竴寮?,
                         tint = TextPrimary,
                         modifier = Modifier.size(28.dp)
                     )
@@ -763,7 +762,7 @@ fun HeroCarousel(
 }
 
 /**
- * 轮播页面
+ * 杞挱椤甸潰
  */
 @Composable
 fun CarouselPage(
@@ -775,7 +774,7 @@ fun CarouselPage(
             .fillMaxSize()
             .focusable()
     ) {
-        // 背景图片
+        // 鑳屾櫙鍥剧墖
         AsyncImage(
             model = item.backdropPath ?: item.posterPath,
             contentDescription = item.title,
@@ -783,7 +782,7 @@ fun CarouselPage(
             contentScale = ContentScale.Crop
         )
         
-        // 渐变遮罩
+        // 娓愬彉閬僵
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -799,7 +798,7 @@ fun CarouselPage(
                 )
         )
         
-        // 左侧光晕
+        // 宸︿晶鍏夋檿
         Box(
             modifier = Modifier
                 .fillMaxHeight()
@@ -819,13 +818,13 @@ fun CarouselPage(
                 )
         )
         
-        // 内容
+        // 鍐呭
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 64.dp)
         ) {
-            // 类型标签
+            // 绫诲瀷鏍囩
             Surface(
                 shape = RoundedCornerShape(8.dp),
                 color = when (item.type) {
@@ -836,9 +835,9 @@ fun CarouselPage(
             ) {
                 Text(
                     text = when (item.type) {
-                        MediaType.MOVIE -> "电影"
-                        MediaType.TV_SHOW -> "电视剧"
-                        MediaType.ANIME -> "动漫"
+                        MediaType.MOVIE -> "鐢靛奖"
+                        MediaType.TV_SHOW -> "鐢佃鍓?
+                        MediaType.ANIME -> "鍔ㄦ极"
                     },
                     color = Color.White,
                     fontSize = 12.sp,
@@ -849,7 +848,7 @@ fun CarouselPage(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 标题
+            // 鏍囬
             Text(
                 text = item.title,
                 color = Color.White,
@@ -864,11 +863,11 @@ fun CarouselPage(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 元信息
+            // 鍏冧俊鎭?
             Row(verticalAlignment = Alignment.CenterVertically) {
                 item.year?.let {
                     Text(text = "$it", color = TextSecondary, fontSize = 15.sp)
-                    Text(text = " • ", color = TextTertiary, fontSize = 15.sp)
+                    Text(text = " 鈥?", color = TextTertiary, fontSize = 15.sp)
                 }
                 
                 if (item.rating > 0) {
@@ -884,12 +883,12 @@ fun CarouselPage(
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Text(text = " • ", color = TextTertiary, fontSize = 15.sp)
+                    Text(text = " 鈥?", color = TextTertiary, fontSize = 15.sp)
                 }
                 
                 item.genres.take(2).forEachIndexed { index, genre ->
                     if (index > 0) {
-                        Text(text = " • ", color = TextTertiary, fontSize = 15.sp)
+                        Text(text = " 鈥?", color = TextTertiary, fontSize = 15.sp)
                     }
                     Text(text = genre, color = TextSecondary, fontSize = 15.sp)
                 }
@@ -897,7 +896,7 @@ fun CarouselPage(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // 简介
+            // 绠€浠?
             item.overview?.let { overview ->
                 Text(
                     text = overview.take(150) + if (overview.length > 150) "..." else "",
@@ -912,7 +911,7 @@ fun CarouselPage(
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // 按钮
+            // 鎸夐挳
             Row {
                 Button(
                     onClick = onClick,
@@ -928,7 +927,7 @@ fun CarouselPage(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "立即播放",
+                        text = "绔嬪嵆鎾斁",
                         color = BackgroundDeep,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold
@@ -948,7 +947,7 @@ fun CarouselPage(
                     )
                 ) {
                     Text(
-                        text = "详情",
+                        text = "璇︽儏",
                         color = Color.White,
                         fontSize = 15.sp
                     )
@@ -959,7 +958,7 @@ fun CarouselPage(
 }
 
 /**
- * 页面指示器
+ * 椤甸潰鎸囩ず鍣?
  */
 @Composable
 fun PageIndicator(
@@ -1024,3 +1023,8 @@ fun EmptyState(
         )
     }
 }
+
+
+
+
+
