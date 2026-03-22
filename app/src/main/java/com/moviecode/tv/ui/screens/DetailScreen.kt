@@ -127,7 +127,7 @@ class DetailViewModel @Inject constructor(
 @Composable
 fun DetailScreen(
     onBack: () -> Unit,
-    onPlay: (String) -> Unit,
+    onPlay: (String, String) -> Unit,
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val mediaItem by viewModel.mediaItem.collectAsState()
@@ -153,7 +153,7 @@ fun DetailScreen(
                     item {
                         EnhancedDetailHero(
                             item = item,
-                            onPlay = { item.filePath?.let { onPlay(it) } }
+                            onPlay = { item.filePath?.let { path -> onPlay(path, item.id) } }
                         )
                     }
                     
@@ -206,7 +206,7 @@ fun DetailScreen(
                         items(episodes) { episode ->
                             EnhancedEpisodeCard(
                                 episode = episode,
-                                onClick = { episode.filePath?.let { onPlay(it) } }
+                                onClick = { episode.filePath?.let { path -> onPlay(path, episode.id) } }
                             )
                         }
                     }
