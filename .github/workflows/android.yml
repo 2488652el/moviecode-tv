@@ -42,7 +42,7 @@ jobs:
       - name: Build with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace --info
+          ./gradlew assembleTvDebug --stacktrace --info 2>&1 | tail -100
 
       - name: Run tests
         run: ./gradlew test
